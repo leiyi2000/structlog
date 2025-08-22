@@ -537,10 +537,6 @@ class AsyncBoundLogger:
     #: synchronously occasionally.
     sync_bl: BoundLogger
 
-    # Blatant lie, we use a property for _context. Need this for Protocol
-    # though.
-    _context: Context
-
     _executor = None
     _bound_logger_factory = BoundLogger
 
@@ -565,16 +561,14 @@ class AsyncBoundLogger:
         )
         self._loop = asyncio.get_running_loop()
 
-    # We have to ignore the type because we've already declared it to ensure
-    # we're a BindableLogger.
     # Instances would've been correctly recognized as such, however the class
     # not and we need the class in `structlog.configure()`.
-    @property  # type: ignore[no-redef]
+    @property
     def _context(self) -> Context:
         return self.sync_bl._context
 
-    def bind(self, **new_values: Any) -> AsyncBoundLogger:
-        return AsyncBoundLogger(
+    def bind(self, **new_values: Any) -> Self:
+        return self.__class__(
             # logger, processors and context are within sync_bl. These
             # arguments are ignored if _sync_bl is passed. *vroom vroom* over
             # purity.
@@ -585,8 +579,8 @@ class AsyncBoundLogger:
             _loop=self._loop,
         )
 
-    def new(self, **new_values: Any) -> AsyncBoundLogger:
-        return AsyncBoundLogger(
+    def new(self, **new_values: Any) -> Self:
+        return self.__class__(
             # c.f. comment in bind
             logger=None,  # type: ignore[arg-type]
             processors=(),
@@ -595,8 +589,8 @@ class AsyncBoundLogger:
             _loop=self._loop,
         )
 
-    def unbind(self, *keys: str) -> AsyncBoundLogger:
-        return AsyncBoundLogger(
+    def unbind(self, *keys: str) -> Self:
+        return self.__class__(
             # c.f. comment in bind
             logger=None,  # type: ignore[arg-type]
             processors=(),
@@ -605,8 +599,8 @@ class AsyncBoundLogger:
             _loop=self._loop,
         )
 
-    def try_unbind(self, *keys: str) -> AsyncBoundLogger:
-        return AsyncBoundLogger(
+    def try_unbind(self, *keys: str) -> Self:
+        return self.__class__(
             # c.f. comment in bind
             logger=None,  # type: ignore[arg-type]
             processors=(),
